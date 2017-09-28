@@ -7,8 +7,8 @@
  */
 package org.tinyradius.proxy;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.packet.RadiusPacket;
 import org.tinyradius.util.RadiusEndpoint;
@@ -201,7 +201,7 @@ public abstract class RadiusProxy
      * Stores the proxy connection object in the cache with a key that
      * is added to the packet in the "Proxy-State" attribute.
      * @param packet the packet to proxy
-     * @param proxyCon the RadiusProxyConnection for this packet
+     * @param proxyConnection the RadiusProxyConnection for this packet
      * @throws IOException
      */
     protected void proxyPacket(RadiusPacket packet, RadiusProxyConnection proxyConnection)
@@ -252,6 +252,5 @@ public abstract class RadiusProxy
 
     private int proxyPort = 1814;
     private DatagramSocket proxySocket = null;
-    private static Log logger = LogFactory.getLog(RadiusProxy.class);
-
+    private static final Logger logger = LoggerFactory.getLogger(RadiusProxy.class);
 }

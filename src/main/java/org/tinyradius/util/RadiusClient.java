@@ -7,8 +7,8 @@
  */
 package org.tinyradius.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinyradius.packet.AccessRequest;
 import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.packet.RadiusPacket;
@@ -334,6 +334,6 @@ public class RadiusClient {
     private DatagramSocket socket = null;
     private int retryCount = 3;
     private int socketTimeout = 3000;
-    private static Log logger = LogFactory.getLog(RadiusClient.class);
+    private static Logger logger = LoggerFactory.getLogger(RadiusClient.class);
 
 }
