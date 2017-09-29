@@ -23,7 +23,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.IntStream;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * This class represents a Radius packet. Subclasses provide convenience methods
@@ -70,14 +72,16 @@ public class RadiusPacket {
     /**
      * Random number generator.
      */
-    private final static SecureRandom random = new SecureRandom();
+    private final static SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
      * Next packet identifier.
      */
     private static int nextPacketId = 0;
 
     static {
-        random.setSeed(UUID.randomUUID().toString().getBytes());
+        StringBuilder builder = new StringBuilder();
+        IntStream.range(0, 1024).forEach(i -> builder.append(randomUUID()));
+        SECURE_RANDOM.setSeed(builder.toString().getBytes());
     }
 
     /**
@@ -984,7 +988,7 @@ public class RadiusPacket {
     protected byte[] createRequestAuthenticator(String sharedSecret) {
         byte[] secretBytes = RadiusUtil.getUtf8Bytes(sharedSecret);
         byte[] randomBytes = new byte[16];
-        random.nextBytes(randomBytes);
+        SECURE_RANDOM.nextBytes(randomBytes);
 
         MessageDigest md5 = getMd5Digest();
         md5.reset();

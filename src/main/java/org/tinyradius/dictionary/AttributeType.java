@@ -92,7 +92,7 @@ public class AttributeType {
      * @param name type name
      */
     public void setName(String name) {
-        if (name == null || name.length() == 0) {
+        if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("name is empty");
         }
         this.name = name;
@@ -165,7 +165,7 @@ public class AttributeType {
      * @return Integer or null
      */
     public Integer getEnumeration(String value) {
-        if (value == null || value.length() == 0) {
+        if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException("value is empty");
         }
         if (enumeration == null) {
@@ -186,7 +186,7 @@ public class AttributeType {
      * @param name the name for this number
      */
     public void addEnumerationValue(int num, String name) {
-        if (name == null || name.length() == 0) {
+        if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("name is empty");
         }
         if (enumeration == null) {

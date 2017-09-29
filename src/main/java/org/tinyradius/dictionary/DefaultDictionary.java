@@ -21,7 +21,7 @@ public class DefaultDictionary
     extends MemoryDictionary {
 
     private static final String DICTIONARY_RESOURCE = "org/tinyradius/dictionary/default_dictionary";
-    private static DefaultDictionary instance = null;
+    private static final DefaultDictionary instance = new DefaultDictionary();
 
     /**
      * Creates the singleton instance of this object
@@ -29,7 +29,6 @@ public class DefaultDictionary
      */
     static {
         try {
-            instance = new DefaultDictionary();
             InputStream source = DefaultDictionary.class.getClassLoader().getResourceAsStream(DICTIONARY_RESOURCE);
             DictionaryParser.parseDictionary(source, instance);
         }

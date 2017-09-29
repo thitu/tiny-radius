@@ -17,6 +17,9 @@ import org.tinyradius.util.RadiusUtil;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * This class represents an Access-Request Radius packet.
@@ -51,7 +54,7 @@ public class AccessRequest extends RadiusPacket {
     /**
      * Random generator
      */
-    private static SecureRandom random = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     /**
      * Logger for logging information about malformed packets
      */
@@ -73,6 +76,12 @@ public class AccessRequest extends RadiusPacket {
      * CHAP challenge from a decoded CHAP Access-Request.
      */
     private byte[] chapChallenge;
+
+    static {
+        StringBuilder builder = new StringBuilder();
+        IntStream.range(0, 1024).forEach(i -> builder.append(randomUUID()));
+        SECURE_RANDOM.setSeed(builder.toString().getBytes());
+    }
 
     /**
      * Constructs an empty Access-Request packet.
@@ -361,13 +370,13 @@ public class AccessRequest extends RadiusPacket {
     }
 
     /**
-     * Creates a random CHAP challenge using a secure random algorithm.
+     * Creates a SECURE_RANDOM CHAP challenge using a secure SECURE_RANDOM algorithm.
      *
      * @return 16 byte CHAP challenge
      */
     private byte[] createChapChallenge() {
         byte[] challenge = new byte[16];
-        random.nextBytes(challenge);
+        SECURE_RANDOM.nextBytes(challenge);
         return challenge;
     }
 
@@ -380,7 +389,7 @@ public class AccessRequest extends RadiusPacket {
      */
     private byte[] encodeChapPassword(String plaintext, byte[] chapChallenge) {
         // see RFC 2865 section 2.2
-        byte chapIdentifier = (byte) random.nextInt(256);
+        byte chapIdentifier = (byte) SECURE_RANDOM.nextInt(256);
         byte[] chapPassword = new byte[17];
         chapPassword[0] = chapIdentifier;
 
