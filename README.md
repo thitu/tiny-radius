@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/thitu/tiny-radius.svg?branch=master)](https://travis-ci.org/thitu/tiny-radius)
+
 ## TinyRadius
 
 - Ported from [http://tinyradius.sourceforge.net](http://tinyradius.sourceforge.net/)
