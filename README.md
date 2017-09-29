@@ -4,7 +4,6 @@
 
 - I have updated it and brought it into the world of generics, and other features of Java 7 & 8.
 
+- I have also swapped `maven` for `gradle` as the project's build tool.
+
 - It is a personal pet project and is under constant development.
-
-
-
