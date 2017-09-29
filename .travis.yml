@@ -1,0 +1,11 @@
+branches:
+  only:
+    - master
+
+filter_secrets: false
+
+language: java
+install: false
+
+script:
+  ./gradlew clean build
