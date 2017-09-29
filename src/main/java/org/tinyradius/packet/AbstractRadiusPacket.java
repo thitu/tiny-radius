@@ -4,6 +4,10 @@ import org.tinyradius.util.RadiusUtil;
 
 import java.security.MessageDigest;
 
+/**
+ * @author Nikolas Thitu
+ *
+ */
 public abstract class AbstractRadiusPacket extends RadiusPacket {
     AbstractRadiusPacket(int accountingRequest, int nextPacketIdentifier) {
         super(accountingRequest, nextPacketIdentifier);
