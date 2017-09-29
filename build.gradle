@@ -1,0 +1,57 @@
+group "com.github.thitu"
+version "0.1.0"
+
+buildscript {
+    allprojects {
+        repositories {
+            mavenCentral()
+            jcenter()
+        }
+    }
+}
+
+apply plugin: "java"
+apply plugin: "groovy"
+apply plugin: "eclipse"
+apply plugin: "idea"
+apply plugin: "maven"
+apply plugin: "maven-publish"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    compile "org.slf4j:slf4j-api:1.7.25"
+
+    testCompile "org.codehaus.groovy:groovy-all:2.4.11"
+    testCompile "org.spockframework:spock-core:1.1-groovy-2.4"
+}
+
+compileJava {
+    options.compilerArgs << "-Xlint:all"
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        events "PASSED", "FAILED", "SKIPPED"
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        // https://docs.gradle.org/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html
+        failOnVersionConflict()
+
+        def list = []
+        list << "org.codehaus.groovy:groovy-all:2.4.11"
+
+        force list.toArray()
+        forcedModules = list
+    }
+}
