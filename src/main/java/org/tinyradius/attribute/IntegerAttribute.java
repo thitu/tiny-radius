@@ -25,7 +25,8 @@ public class IntegerAttribute extends RadiusAttribute {
 
     /**
      * Constructs an integer attribute with the given value.
-     * @param type attribute type
+     *
+     * @param type  attribute type
      * @param value attribute value
      */
     public IntegerAttribute(int type, int value) {
@@ -35,6 +36,7 @@ public class IntegerAttribute extends RadiusAttribute {
 
     /**
      * Returns the string value of this attribute.
+     *
      * @return a string
      */
     public int getAttributeValueInt() {
@@ -46,6 +48,7 @@ public class IntegerAttribute extends RadiusAttribute {
     /**
      * Returns the value of this attribute as a string.
      * Tries to resolve enumerations.
+     *
      * @see org.tinyradius.attribute.RadiusAttribute#getAttributeValue()
      */
     public String getAttributeValue() {
@@ -53,8 +56,9 @@ public class IntegerAttribute extends RadiusAttribute {
         AttributeType at = getAttributeTypeObject();
         if (at != null) {
             String name = at.getEnumeration(value);
-            if (name != null)
+            if (name != null) {
                 return name;
+            }
         }
 
         return Integer.toString(value);
@@ -62,20 +66,8 @@ public class IntegerAttribute extends RadiusAttribute {
 
     /**
      * Sets the value of this attribute.
-     * @param value integer value
-     */
-    public void setAttributeValue(int value) {
-        byte[] data = new byte[4];
-        data[0] = (byte) (value >> 24 & 0x0ff);
-        data[1] = (byte) (value >> 16 & 0x0ff);
-        data[2] = (byte) (value >> 8 & 0x0ff);
-        data[3] = (byte) (value & 0x0ff);
-        setAttributeData(data);
-    }
-
-    /**
-     * Sets the value of this attribute.
-     * @exception NumberFormatException if value is not a number and constant cannot be resolved
+     *
+     * @throws NumberFormatException if value is not a number and constant cannot be resolved
      * @see org.tinyradius.attribute.RadiusAttribute#setAttributeValue(java.lang.String)
      */
     public void setAttributeValue(String value) {
@@ -92,13 +84,29 @@ public class IntegerAttribute extends RadiusAttribute {
     }
 
     /**
+     * Sets the value of this attribute.
+     *
+     * @param value integer value
+     */
+    public void setAttributeValue(int value) {
+        byte[] data = new byte[4];
+        data[0] = (byte) (value >> 24 & 0x0ff);
+        data[1] = (byte) (value >> 16 & 0x0ff);
+        data[2] = (byte) (value >> 8 & 0x0ff);
+        data[3] = (byte) (value & 0x0ff);
+        setAttributeData(data);
+    }
+
+    /**
      * Check attribute length.
+     *
      * @see org.tinyradius.attribute.RadiusAttribute#readAttribute(byte[], int, int)
      */
     public void readAttribute(byte[] data, int offset, int length)
         throws RadiusException {
-        if (length != 6)
+        if (length != 6) {
             throw new RadiusException("integer attribute: expected 4 bytes data");
+        }
         super.readAttribute(data, offset, length);
     }
 

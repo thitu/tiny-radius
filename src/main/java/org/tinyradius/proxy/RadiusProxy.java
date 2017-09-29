@@ -31,6 +31,20 @@ import java.util.Map;
 public abstract class RadiusProxy
     extends RadiusServer {
 
+    private static final Logger logger = LoggerFactory.getLogger(RadiusProxy.class);
+    /**
+     * Index for Proxy-State attribute.
+     */
+    private int proxyIndex = 1;
+    /**
+     * Cache for Radius proxy connections belonging to sent packets
+     * without a received response.
+     * Key: Proxy Index (String), Value: RadiusProxyConnection
+     */
+    private Map<String, RadiusProxyConnection> proxyConnections = new HashMap<>();
+    private int proxyPort = 1814;
+    private DatagramSocket proxySocket = null;
+
     /**
      * Starts the Radius proxy. Listens on the proxy port.
      */
@@ -45,7 +59,7 @@ public abstract class RadiusProxy
                         listen(getProxySocket());
                     }
                     catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Oops!", e);
                     }
                 }
             }.start();
@@ -57,8 +71,9 @@ public abstract class RadiusProxy
      */
     public void stop() {
         logger.info("stopping Radius proxy");
-        if (proxySocket != null)
+        if (proxySocket != null) {
             proxySocket.close();
+        }
         super.stop();
     }
 
@@ -66,9 +81,10 @@ public abstract class RadiusProxy
      * This method must be implemented to return a RadiusEndpoint
      * if the given packet is to be proxied. The endpoint represents the
      * Radius server the packet should be proxied to.
+     *
      * @param packet the packet in question
      * @param client the client endpoint the packet originated from
-     * (containing the address, port number and shared secret)
+     *               (containing the address, port number and shared secret)
      * @return a RadiusEndpoint or null if the packet should not be
      * proxied
      */
@@ -77,6 +93,7 @@ public abstract class RadiusProxy
     /**
      * Returns the proxy port this server listens to.
      * Defaults to 1814.
+     *
      * @return proxy port
      */
     public int getProxyPort() {
@@ -86,6 +103,7 @@ public abstract class RadiusProxy
     /**
      * Sets the proxy port this server listens to.
      * Please call before start().
+     *
      * @param proxyPort proxy port
      */
     public void setProxyPort(int proxyPort) {
@@ -95,28 +113,33 @@ public abstract class RadiusProxy
 
     /**
      * Sets the socket timeout.
+     *
      * @param socketTimeout socket timeout, >0 ms
      * @throws SocketException
      */
     public void setSocketTimeout(int socketTimeout)
         throws SocketException {
         super.setSocketTimeout(socketTimeout);
-        if (proxySocket != null)
+        if (proxySocket != null) {
             proxySocket.setSoTimeout(socketTimeout);
+        }
     }
 
     /**
      * Returns a socket bound to the proxy port.
+     *
      * @return socket
      * @throws SocketException
      */
     protected DatagramSocket getProxySocket()
         throws SocketException {
         if (proxySocket == null) {
-            if (getListenAddress() == null)
+            if (getListenAddress() == null) {
                 proxySocket = new DatagramSocket(getProxyPort());
-            else
+            }
+            else {
                 proxySocket = new DatagramSocket(getProxyPort(), getListenAddress());
+            }
             proxySocket.setSoTimeout(getSocketTimeout());
         }
         return proxySocket;
@@ -144,15 +167,17 @@ public abstract class RadiusProxy
             proxyPacket(request, proxyConnection);
             return null;
         }
-        else
+        else {
             // normal processing
             return super.handlePacket(localAddress, remoteAddress, request, sharedSecret);
+        }
     }
 
     /**
      * Sends an answer to a proxied packet back to the original host.
      * Retrieves the RadiusProxyConnection object from the cache employing
      * the Proxy-State attribute.
+     *
      * @param packet packet to be sent back
      * @param remote the server the packet arrived from
      * @throws IOException
@@ -160,14 +185,15 @@ public abstract class RadiusProxy
     protected void proxyPacketReceived(RadiusPacket packet, InetSocketAddress remote)
         throws IOException, RadiusException {
         // retrieve my Proxy-State attribute (the last)
-        List proxyStates = packet.getAttributes(33);
-        if (proxyStates == null || proxyStates.size() == 0)
+        List<RadiusAttribute> proxyStates = packet.getAttributes(33);
+        if (proxyStates == null || proxyStates.size() == 0) {
             throw new RadiusException("proxy packet without Proxy-State attribute");
-        RadiusAttribute proxyState = (RadiusAttribute) proxyStates.get(proxyStates.size() - 1);
+        }
+        RadiusAttribute proxyState = proxyStates.get(proxyStates.size() - 1);
 
         // retrieve proxy connection from cache
         String state = new String(proxyState.getAttributeData());
-        RadiusProxyConnection proxyConnection = (RadiusProxyConnection) proxyConnections.remove(state);
+        RadiusProxyConnection proxyConnection = proxyConnections.remove(state);
         if (proxyConnection == null) {
             logger.warn("received packet on proxy port without saved proxy connection - duplicate?");
             return;
@@ -176,8 +202,8 @@ public abstract class RadiusProxy
         // retrieve client
         RadiusEndpoint client = proxyConnection.getRadiusClient();
         if (logger.isInfoEnabled()) {
-            logger.info("received proxy packet: " + packet);
-            logger.info("forward packet to " + client.getEndpointAddress().toString() + " with secret " + client.getSharedSecret());
+            logger.info("received proxy packet: {}", packet);
+            logger.info("forward packet to {} with secret {}", client.getEndpointAddress(), client.getSharedSecret());
         }
 
         // remove only own Proxy-State (last attribute)
@@ -189,10 +215,12 @@ public abstract class RadiusProxy
 
         // send back using correct socket
         DatagramSocket socket;
-        if (proxyConnection.getPort() == getAuthPort())
+        if (proxyConnection.getPort() == getAuthPort()) {
             socket = getAuthSocket();
-        else
+        }
+        else {
             socket = getAcctSocket();
+        }
         socket.send(datagram);
     }
 
@@ -200,7 +228,8 @@ public abstract class RadiusProxy
      * Proxies the given packet to the server given in the proxy connection.
      * Stores the proxy connection object in the cache with a key that
      * is added to the packet in the "Proxy-State" attribute.
-     * @param packet the packet to proxy
+     *
+     * @param packet          the packet to proxy
      * @param proxyConnection the RadiusProxyConnection for this packet
      * @throws IOException
      */
@@ -237,20 +266,4 @@ public abstract class RadiusProxy
         DatagramSocket proxySocket = getProxySocket();
         proxySocket.send(datagram);
     }
-
-    /**
-     * Index for Proxy-State attribute.
-     */
-    private int proxyIndex = 1;
-
-    /**
-     * Cache for Radius proxy connections belonging to sent packets
-     * without a received response.
-     * Key: Proxy Index (String), Value: RadiusProxyConnection
-     */
-    private Map proxyConnections = new HashMap();
-
-    private int proxyPort = 1814;
-    private DatagramSocket proxySocket = null;
-    private static final Logger logger = LoggerFactory.getLogger(RadiusProxy.class);
 }

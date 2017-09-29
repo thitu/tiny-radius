@@ -16,10 +16,14 @@ import java.net.InetSocketAddress;
  */
 public class RadiusEndpoint {
 
+    private InetSocketAddress endpointAddress;
+    private String sharedSecret;
+
     /**
      * Constructs a RadiusEndpoint object.
+     *
      * @param remoteAddress remote address (ip and port number)
-     * @param sharedSecret shared secret
+     * @param sharedSecret  shared secret
      */
     public RadiusEndpoint(InetSocketAddress remoteAddress, String sharedSecret) {
         this.endpointAddress = remoteAddress;
@@ -28,6 +32,7 @@ public class RadiusEndpoint {
 
     /**
      * Returns the remote address.
+     *
      * @return remote address
      */
     public InetSocketAddress getEndpointAddress() {
@@ -36,13 +41,11 @@ public class RadiusEndpoint {
 
     /**
      * Returns the shared secret.
+     *
      * @return shared secret
      */
     public String getSharedSecret() {
         return sharedSecret;
     }
-
-    private InetSocketAddress endpointAddress;
-    private String sharedSecret;
 
 }

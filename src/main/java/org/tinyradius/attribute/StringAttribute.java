@@ -24,7 +24,8 @@ public class StringAttribute extends RadiusAttribute {
 
     /**
      * Constructs a string attribute with the given value.
-     * @param type attribute type
+     *
+     * @param type  attribute type
      * @param value attribute value
      */
     public StringAttribute(int type, String value) {
@@ -34,6 +35,7 @@ public class StringAttribute extends RadiusAttribute {
 
     /**
      * Returns the string value of this attribute.
+     *
      * @return a string
      */
     public String getAttributeValue() {
@@ -47,11 +49,13 @@ public class StringAttribute extends RadiusAttribute {
 
     /**
      * Sets the string value of this attribute.
+     *
      * @param value string, not null
      */
     public void setAttributeValue(String value) {
-        if (value == null)
+        if (value == null) {
             throw new NullPointerException("string value not set");
+        }
         try {
             setAttributeData(value.getBytes("UTF-8"));
         }

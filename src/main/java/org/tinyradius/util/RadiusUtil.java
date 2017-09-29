@@ -17,6 +17,7 @@ public class RadiusUtil {
     /**
      * Returns the passed string as a byte array containing the
      * string in UTF-8 representation.
+     *
      * @param str Java string
      * @return UTF-8 byte array
      */
@@ -32,6 +33,7 @@ public class RadiusUtil {
     /**
      * Creates a string from the passed byte array containing the
      * string in UTF-8 representation.
+     *
      * @param utf8 UTF-8 byte array
      * @return Java string
      */
@@ -47,18 +49,21 @@ public class RadiusUtil {
     /**
      * Returns the byte array as a hex string in the format
      * "0x1234".
+     *
      * @param data byte array
      * @return hex string
      */
     public static String getHexString(byte[] data) {
         StringBuffer hex = new StringBuffer("0x");
-        if (data != null)
+        if (data != null) {
             for (int i = 0; i < data.length; i++) {
                 String digit = Integer.toString(data[i] & 0x0ff, 16);
-                if (digit.length() < 2)
+                if (digit.length() < 2) {
                     hex.append('0');
+                }
                 hex.append(digit);
             }
+        }
         return hex.toString();
     }
 

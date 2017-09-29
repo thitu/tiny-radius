@@ -27,18 +27,22 @@ public class TestServer {
         RadiusServer server = new RadiusServer() {
             // Authorize localhost/testing123
             public String getSharedSecret(InetSocketAddress client) {
-                if (client.getAddress().getHostAddress().equals("127.0.0.1"))
+                if (client.getAddress().getHostAddress().equals("127.0.0.1")) {
                     return "testing123";
-                else
+                }
+                else {
                     return null;
+                }
             }
 
             // Authenticate mw
             public String getUserPassword(String userName) {
-                if (userName.equals("mw"))
+                if (userName.equals("mw")) {
                     return "test";
-                else
+                }
+                else {
                     return null;
+                }
             }
 
             // Adds an attribute to the Access-Accept packet
@@ -46,19 +50,24 @@ public class TestServer {
                 throws RadiusException {
                 System.out.println("Received Access-Request:\n" + accessRequest);
                 RadiusPacket packet = super.accessRequestReceived(accessRequest, client);
-                if (packet.getPacketType() == RadiusPacket.ACCESS_ACCEPT)
+                if (packet.getPacketType() == RadiusPacket.ACCESS_ACCEPT) {
                     packet.addAttribute("Reply-Message", "Welcome " + accessRequest.getUserName() + "!");
-                if (packet == null)
+                }
+                if (packet == null) {
                     System.out.println("Ignore packet.");
-                else
+                }
+                else {
                     System.out.println("Answer:\n" + packet);
+                }
                 return packet;
             }
         };
-        if (args.length >= 1)
+        if (args.length >= 1) {
             server.setAuthPort(Integer.parseInt(args[0]));
-        if (args.length >= 2)
+        }
+        if (args.length >= 2) {
             server.setAcctPort(Integer.parseInt(args[1]));
+        }
 
         server.start(true, true);
 

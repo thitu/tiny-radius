@@ -32,6 +32,47 @@ public class AccessRequest extends RadiusPacket {
      * Challenged Handshake Authentication Protocol
      */
     public static final String AUTH_CHAP = "chap";
+    /**
+     * Radius type code for Radius attribute User-Name
+     */
+    private static final int USER_NAME = 1;
+    /**
+     * Radius attribute type for User-Password attribute.
+     */
+    private static final int USER_PASSWORD = 2;
+    /**
+     * Radius attribute type for CHAP-Password attribute.
+     */
+    private static final int CHAP_PASSWORD = 3;
+    /**
+     * Radius attribute type for CHAP-Challenge attribute.
+     */
+    private static final int CHAP_CHALLENGE = 60;
+    /**
+     * Random generator
+     */
+    private static SecureRandom random = new SecureRandom();
+    /**
+     * Logger for logging information about malformed packets
+     */
+    private static Logger logger = LoggerFactory.getLogger(AccessRequest.class);
+    /**
+     * Temporary storage for the unencrypted User-Password
+     * attribute.
+     */
+    private String password;
+    /**
+     * Authentication protocol for this access request.
+     */
+    private String authProtocol = AUTH_PAP;
+    /**
+     * CHAP password from a decoded CHAP Access-Request.
+     */
+    private byte[] chapPassword;
+    /**
+     * CHAP challenge from a decoded CHAP Access-Request.
+     */
+    private byte[] chapChallenge;
 
     /**
      * Constructs an empty Access-Request packet.
@@ -44,7 +85,8 @@ public class AccessRequest extends RadiusPacket {
      * Constructs an Access-Request packet, sets the
      * code, identifier and adds an User-Name and an
      * User-Password attribute (PAP).
-     * @param userName user name
+     *
+     * @param userName     user name
      * @param userPassword user password
      */
     public AccessRequest(String userName, String userPassword) {
@@ -54,54 +96,63 @@ public class AccessRequest extends RadiusPacket {
     }
 
     /**
-     * Sets the User-Name attribute of this Access-Request.
-     * @param userName user name to set
-     */
-    public void setUserName(String userName) {
-        if (userName == null)
-            throw new NullPointerException("user name not set");
-        if (userName.length() == 0)
-            throw new IllegalArgumentException("empty user name not allowed");
-
-        removeAttributes(USER_NAME);
-        addAttribute(new StringAttribute(USER_NAME, userName));
-    }
-
-    /**
-     * Sets the plain-text user password.
-     * @param userPassword user password to set
-     */
-    public void setUserPassword(String userPassword) {
-        if (userPassword == null || userPassword.length() == 0)
-            throw new IllegalArgumentException("password is empty");
-        this.password = userPassword;
-    }
-
-    /**
      * Retrieves the plain-text user password.
      * Returns null for CHAP - use verifyPassword().
-     * @see #verifyPassword(String)
+     *
      * @return user password
+     * @see #verifyPassword(String)
      */
     public String getUserPassword() {
         return password;
     }
 
     /**
+     * Sets the plain-text user password.
+     *
+     * @param userPassword user password to set
+     */
+    public void setUserPassword(String userPassword) {
+        if (userPassword == null || userPassword.length() == 0) {
+            throw new IllegalArgumentException("password is empty");
+        }
+        this.password = userPassword;
+    }
+
+    /**
      * Retrieves the user name from the User-Name attribute.
+     *
      * @return user name
      */
     public String getUserName() {
-        List attrs = getAttributes(USER_NAME);
-        if (attrs.size() < 1 || attrs.size() > 1)
+        List<RadiusAttribute> attrs = getAttributes(USER_NAME);
+        if (attrs.size() < 1 || attrs.size() > 1) {
             throw new RuntimeException("exactly one User-Name attribute required");
+        }
 
-        RadiusAttribute ra = (RadiusAttribute) attrs.get(0);
-        return ((StringAttribute) ra).getAttributeValue();
+        RadiusAttribute ra = attrs.get(0);
+        return ra.getAttributeValue();
+    }
+
+    /**
+     * Sets the User-Name attribute of this Access-Request.
+     *
+     * @param userName user name to set
+     */
+    public void setUserName(String userName) {
+        if (userName == null) {
+            throw new NullPointerException("user name not set");
+        }
+        if (userName.length() == 0) {
+            throw new IllegalArgumentException("empty user name not allowed");
+        }
+
+        removeAttributes(USER_NAME);
+        addAttribute(new StringAttribute(USER_NAME, userName));
     }
 
     /**
      * Returns the protocol used for encrypting the passphrase.
+     *
      * @return AUTH_PAP or AUTH_CHAP
      */
     public String getAuthProtocol() {
@@ -111,34 +162,42 @@ public class AccessRequest extends RadiusPacket {
     /**
      * Selects the protocol to use for encrypting the passphrase when
      * encoding this Radius packet.
+     *
      * @param authProtocol AUTH_PAP or AUTH_CHAP
      */
     public void setAuthProtocol(String authProtocol) {
-        if (authProtocol != null && (authProtocol.equals(AUTH_PAP) || authProtocol.equals(AUTH_CHAP)))
+        if (authProtocol != null && (authProtocol.equals(AUTH_PAP) || authProtocol.equals(AUTH_CHAP))) {
             this.authProtocol = authProtocol;
-        else
+        }
+        else {
             throw new IllegalArgumentException("protocol must be pap or chap");
+        }
     }
 
     /**
      * Verifies that the passed plain-text password matches the password
      * (hash) send with this Access-Request packet. Works with both PAP
      * and CHAP.
+     *
      * @param plaintext
      * @return true if the password is valid, false otherwise
      */
     public boolean verifyPassword(String plaintext)
         throws RadiusException {
-        if (plaintext == null || plaintext.length() == 0)
+        if (plaintext == null || plaintext.length() == 0) {
             throw new IllegalArgumentException("password is empty");
-        if (getAuthProtocol().equals(AUTH_CHAP))
+        }
+        if (getAuthProtocol().equals(AUTH_CHAP)) {
             return verifyChapPassword(plaintext);
-        else
+        }
+        else {
             return getUserPassword().equals(plaintext);
+        }
     }
 
     /**
      * Decrypts the User-Password attribute.
+     *
      * @see org.tinyradius.packet.RadiusPacket#decodeRequestAttributes(java.lang.String)
      */
     protected void decodeRequestAttributes(String sharedSecret)
@@ -159,17 +218,20 @@ public class AccessRequest extends RadiusPacket {
             this.chapPassword = chapPassword.getAttributeData();
             this.chapChallenge = chapChallenge.getAttributeData();
         }
-        else
+        else {
             throw new RadiusException("Access-Request: User-Password or CHAP-Password/CHAP-Challenge missing");
+        }
     }
 
     /**
      * Sets and encrypts the User-Password attribute.
+     *
      * @see org.tinyradius.packet.RadiusPacket#encodeRequestAttributes(java.lang.String)
      */
     protected void encodeRequestAttributes(String sharedSecret) {
-        if (password == null || password.length() == 0)
+        if (password == null || password.length() == 0) {
             return;
+        }
         // ok for proxied packets whose CHAP password is already encrypted
         //throw new RuntimeException("no password set");
 
@@ -190,7 +252,8 @@ public class AccessRequest extends RadiusPacket {
 
     /**
      * This method encodes the plaintext user password according to RFC 2865.
-     * @param userPass the password to encrypt
+     *
+     * @param userPass     the password to encrypt
      * @param sharedSecret shared secret
      * @return the byte array containing the encrypted password
      */
@@ -244,8 +307,9 @@ public class AccessRequest extends RadiusPacket {
             System.arraycopy(encryptedPass, i, lastBlock, 0, 16);
 
             // perform the XOR as specified by RFC 2865.
-            for (int j = 0; j < 16; j++)
+            for (int j = 0; j < 16; j++) {
                 encryptedPass[i + j] = (byte) (bn[j] ^ encryptedPass[i + j]);
+            }
         }
 
         return encryptedPass;
@@ -253,8 +317,9 @@ public class AccessRequest extends RadiusPacket {
 
     /**
      * Decodes the passed encrypted password and returns the clear-text form.
+     *
      * @param encryptedPass encrypted password
-     * @param sharedSecret shared secret
+     * @param sharedSecret  shared secret
      * @return decrypted password
      */
     private String decodePapPassword(byte[] encryptedPass, byte[] sharedSecret)
@@ -278,14 +343,16 @@ public class AccessRequest extends RadiusPacket {
             System.arraycopy(encryptedPass, i, lastBlock, 0, 16);
 
             // perform the XOR as specified by RFC 2865.
-            for (int j = 0; j < 16; j++)
+            for (int j = 0; j < 16; j++) {
                 encryptedPass[i + j] = (byte) (bn[j] ^ encryptedPass[i + j]);
+            }
         }
 
         // remove trailing zeros
         int len = encryptedPass.length;
-        while (len > 0 && encryptedPass[len - 1] == 0)
+        while (len > 0 && encryptedPass[len - 1] == 0) {
             len--;
+        }
         byte[] passtrunc = new byte[len];
         System.arraycopy(encryptedPass, 0, passtrunc, 0, len);
 
@@ -295,6 +362,7 @@ public class AccessRequest extends RadiusPacket {
 
     /**
      * Creates a random CHAP challenge using a secure random algorithm.
+     *
      * @return 16 byte CHAP challenge
      */
     private byte[] createChapChallenge() {
@@ -305,7 +373,8 @@ public class AccessRequest extends RadiusPacket {
 
     /**
      * Encodes a plain-text password using the given CHAP challenge.
-     * @param plaintext plain-text password
+     *
+     * @param plaintext     plain-text password
      * @param chapChallenge CHAP challenge
      * @return CHAP-encoded password
      */
@@ -327,16 +396,20 @@ public class AccessRequest extends RadiusPacket {
 
     /**
      * Verifies a CHAP password against the given plaintext password.
+     *
      * @return plain-text password
      */
     private boolean verifyChapPassword(String plaintext)
         throws RadiusException {
-        if (plaintext == null || plaintext.length() == 0)
+        if (plaintext == null || plaintext.length() == 0) {
             throw new IllegalArgumentException("plaintext must not be empty");
-        if (chapChallenge == null || chapChallenge.length != 16)
+        }
+        if (chapChallenge == null || chapChallenge.length != 16) {
             throw new RadiusException("CHAP challenge must be 16 bytes");
-        if (chapPassword == null || chapPassword.length != 17)
+        }
+        if (chapPassword == null || chapPassword.length != 17) {
             throw new RadiusException("CHAP password must be 17 bytes");
+        }
 
         byte chapIdentifier = chapPassword[0];
         MessageDigest md5 = getMd5Digest();
@@ -346,61 +419,12 @@ public class AccessRequest extends RadiusPacket {
         byte[] chapHash = md5.digest(chapChallenge);
 
         // compare
-        for (int i = 0; i < 16; i++)
-            if (chapHash[i] != chapPassword[i + 1])
+        for (int i = 0; i < 16; i++) {
+            if (chapHash[i] != chapPassword[i + 1]) {
                 return false;
+            }
+        }
         return true;
     }
-
-    /**
-     * Temporary storage for the unencrypted User-Password
-     * attribute.
-     */
-    private String password;
-
-    /**
-     * Authentication protocol for this access request.
-     */
-    private String authProtocol = AUTH_PAP;
-
-    /**
-     * CHAP password from a decoded CHAP Access-Request.
-     */
-    private byte[] chapPassword;
-
-    /**
-     * CHAP challenge from a decoded CHAP Access-Request.
-     */
-    private byte[] chapChallenge;
-
-    /**
-     * Random generator
-     */
-    private static SecureRandom random = new SecureRandom();
-
-    /**
-     * Radius type code for Radius attribute User-Name
-     */
-    private static final int USER_NAME = 1;
-
-    /**
-     * Radius attribute type for User-Password attribute.
-     */
-    private static final int USER_PASSWORD = 2;
-
-    /**
-     * Radius attribute type for CHAP-Password attribute.
-     */
-    private static final int CHAP_PASSWORD = 3;
-
-    /**
-     * Radius attribute type for CHAP-Challenge attribute.
-     */
-    private static final int CHAP_CHALLENGE = 60;
-
-    /**
-     * Logger for logging information about malformed packets
-     */
-    private static Logger logger = LoggerFactory.getLogger(AccessRequest.class);
 
 }

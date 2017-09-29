@@ -28,14 +28,19 @@ import java.net.UnknownHostException;
  */
 public class TestProxy extends RadiusProxy {
 
+    public static void main(String[] args) {
+        new TestProxy().start(true, true, true);
+    }
+
     public RadiusEndpoint getProxyServer(RadiusPacket packet,
                                          RadiusEndpoint client) {
         // always proxy
         try {
             InetAddress address = InetAddress.getByAddress(new byte[]{127, 0, 0, 1});
             int port = 10000;
-            if (packet instanceof AccountingRequest)
+            if (packet instanceof AccountingRequest) {
                 port = 10001;
+            }
             return new RadiusEndpoint(new InetSocketAddress(address, port), "testing123");
         }
         catch (UnknownHostException uhe) {
@@ -45,21 +50,20 @@ public class TestProxy extends RadiusProxy {
     }
 
     public String getSharedSecret(InetSocketAddress client) {
-        if (client.getPort() == 10000 || client.getPort() == 10001)
+        if (client.getPort() == 10000 || client.getPort() == 10001) {
             return "testing123";
-        else if (client.getAddress().getHostAddress().equals("127.0.0.1"))
+        }
+        else if (client.getAddress().getHostAddress().equals("127.0.0.1")) {
             return "proxytest";
-        else
+        }
+        else {
             return null;
+        }
     }
 
     public String getUserPassword(String userName) {
         // not used because every request is proxied
         return null;
-    }
-
-    public static void main(String[] args) {
-        new TestProxy().start(true, true, true);
     }
 
 }

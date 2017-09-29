@@ -13,14 +13,15 @@ package org.tinyradius.util;
  */
 public class RadiusException extends Exception {
 
+    private static final long serialVersionUID = 2201204523946051388L;
+
     /**
      * Constructs a RadiusException with a message.
+     *
      * @param message error message
      */
     public RadiusException(String message) {
         super(message);
     }
-
-    private static final long serialVersionUID = 2201204523946051388L;
 
 }
